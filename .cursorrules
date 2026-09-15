@@ -1,0 +1,52 @@
+# TrafficMaster Pro — правила проекта для AI
+
+## Стек
+- Backend: FastAPI + PostgreSQL + Redis + SQLAlchemy 2.0 + Pydantic 2.x
+- Frontend: React 18 + Vite + TailwindCSS
+- Внешние API: OpenAI (gpt-4o-mini), Google Sheets API, Yandex SpeechKit
+- Инфраструктура: Docker Compose
+- Python: 3.11
+- Node: 20
+
+## Архитектура
+- Монорепозиторий: /backend, /frontend, /knowledge_base_volume, /secrets
+- Все секреты — только через Docker Secrets или переменные окружения
+- Никогда не коммитить .env, *.json ключи, sk-* ключи
+- БД — через SQLAlchemy ORM, миграции — Alembic
+- Асинхронные операции — async/await
+- Внешние вызовы (OpenAI, Google) — через сервисный слой в /app/services
+
+## Стиль Python
+- Форматирование: Ruff (line-length = 100)
+- Типизация: строгая, все функции с аннотациями
+- Docstrings: Google style на русском
+- Импорты: isort-совместимые, группировка stdlib / third-party / local
+- Логирование: через logging, не print
+- Исключения: кастомные в /app/core/exceptions.py
+
+## Стиль Frontend
+- Функциональные компоненты + хуки
+- Стейт: Zustand (локальный) + React Query (серверный)
+- Стили: TailwindCSS (утилитарные классы)
+- Цветовая палитра проекта:
+  - sun: #FFB627
+  - green: #2ECC71
+  - blue: #3498DB
+  - orange: #FF6B35
+  - dark: #1A2B45
+  - light: #F5F7FA
+- Язык интерфейса: русский
+
+## Бизнес-логика
+- 5 режимов тренировок: КП, Поиск клиентов, Созвон, Возражения, Рассылка
+- Все действия логируются в Google Sheets (через очередь Redis)
+- Резервные копии — раз в час в Google Drive
+- Потеря данных недопустима: PostgreSQL + Sheets + локальный WAL-лог
+
+## Правила коммуникации AI
+- Не использовать placeholder-код типа pass без TODO-комментария
+- Не оставлять неиспользуемые импорты
+- Все endpoint'ы — с Pydantic-схемами request/response
+- Все ошибки — с понятными сообщениями на русском
+- Не использовать any в TypeScript
+- Перед изменением существующего файла — уточнить у пользователя, если логика неочевидна
