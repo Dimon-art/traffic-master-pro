@@ -50,3 +50,20 @@
 - Все ошибки — с понятными сообщениями на русском
 - Не использовать any в TypeScript
 - Перед изменением существующего файла — уточнить у пользователя, если логика неочевидна
+
+## Дизайн-система
+- Единый источник токенов: frontend/src/styles/theme.js
+- ЗАПРЕЩЕНО хардкодить цвета/шрифты/отступы в компонентах.
+  Все значения — через import theme from '../styles/theme'
+- Палитра:
+  - bg #F5EFE6, bgElevated #FDFBF7, bgSunken #EDE4D3
+  - textPrimary #2D1B0E, textBody #3D2B1F, textMuted #7A6652
+  - accent #C0603A, accentHover #A34A28, accentSoft #F2DDD3
+  - success #6B8E5A, error #B54A3A, border #E8DFD2
+- Шрифт: только system-ui, без Google Fonts
+- Типографика: body 18px / 1.7, h1 clamp(40px, 6vw, 72px), h2 clamp(28px, 4vw, 40px)
+- Обязательно: :focus-visible стили, aria-label у иконочных кнопок,
+  семантические теги (header, main, footer, nav, section)
+- Обязательно: адаптивность под 320px, 768px, 1280px
+- Запрещено: Tailwind, styled-components, css-in-js библиотеки.
+  Только inline-стили с объектом theme или CSS-модули
