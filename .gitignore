@@ -1,9 +1,11 @@
 # Secrets and environment
 .env
+*.env
 .env.*
 !.env.example
 secrets/*.json
 secrets/*.txt
+!secrets/*.example
 *.pem
 *.key
 
