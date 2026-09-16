@@ -12,10 +12,17 @@ from app.models.user import User, UserRole
 from app.schemas.training import (
     AnswerIn,
     AnswerOut,
+    NeedsScenarioOut,
     ObjectionScenarioOut,
     TrainingDetailOut,
     TrainingOut,
     TrainingStartIn,
+)
+from app.services.needs_scorer import (
+    classify_question,
+    client_ready,
+    final_score_from_answers as needs_final_score,
+    is_good_round,
 )
 from app.services.objection_scorer import (
     client_accepts,
@@ -23,7 +30,11 @@ from app.services.objection_scorer import (
     pick_client_reply,
     score_objection_answer,
 )
-from app.services.question_loader import load_objection_scenarios, load_questions
+from app.services.question_loader import (
+    load_needs_scenarios,
+    load_objection_scenarios,
+    load_questions,
+)
 from app.services.scorer import final_score, score_answer
 
 router = APIRouter(prefix="/api/trainings", tags=["trainings"])
@@ -109,6 +120,36 @@ def _find_objection_scenario(topic: str) -> dict:
     return scenario
 
 
+def _find_needs_scenario(topic: str) -> dict:
+    """Ищет сценарий выявления потребностей по id или отдаёт HTTP-ошибку.
+
+    Args:
+        topic: Идентификатор сценария.
+
+    Returns:
+        Словарь сценария.
+    """
+    try:
+        scenarios = load_needs_scenarios()
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Банк сценариев недоступен",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Банк сценариев недоступен",
+        ) from exc
+    scenario = next((item for item in scenarios if item.get("id") == topic), None)
+    if scenario is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Сценарий не найден",
+        )
+    return scenario
+
+
 def _start_product_knowledge(
     payload: TrainingStartIn,
     db: Session,
@@ -149,6 +190,38 @@ def _start_objections(
             detail="Укажите сценарий",
         )
     scenario = _find_objection_scenario(str(payload.topic).strip())
+    training = Training(
+        user_id=current_user.id,
+        mode=payload.mode,
+        topic=str(scenario.get("id", payload.topic)).strip(),
+        status=TrainingStatus.STARTED,
+        current_question_index=0,
+    )
+    db.add(training)
+    db.flush()
+    db.add(
+        Message(
+            training_id=training.id,
+            role=MessageRole.AI,
+            content=str(scenario.get("opening", "")),
+        )
+    )
+    db.commit()
+    return _get_training_or_404(db, training.id)
+
+
+def _start_needs(
+    payload: TrainingStartIn,
+    db: Session,
+    current_user: User,
+) -> Training:
+    """Стартует режим «Выявление потребностей»."""
+    if payload.topic is None or not str(payload.topic).strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Укажите сценарий",
+        )
+    scenario = _find_needs_scenario(str(payload.topic).strip())
     training = Training(
         user_id=current_user.id,
         mode=payload.mode,
@@ -246,6 +319,73 @@ def _submit_objection_answer(
     )
 
 
+def _submit_needs_answer(
+    training: Training,
+    payload: AnswerIn,
+    db: Session,
+) -> AnswerOut:
+    """Принимает вопрос менеджера в режиме выявления потребностей."""
+    scenario = _find_needs_scenario(str(training.topic or ""))
+    rounds = scenario.get("rounds") or []
+    index = training.current_question_index
+    if index >= len(rounds) or index >= 7:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Тренировка уже завершена",
+        )
+    round_data = rounds[index]
+    classification = classify_question(payload.content, index)
+    current_score = int(classification["score"])
+    db.add(
+        Message(
+            training_id=training.id,
+            role=MessageRole.USER,
+            content=payload.content,
+            score=current_score,
+        )
+    )
+    is_good = is_good_round(classification)
+    client_reply = str(
+        round_data["good_reply"] if is_good else round_data["bad_reply"]
+    )
+    training.current_question_index = index + 1
+    if training.current_question_index < 7:
+        training.status = TrainingStatus.IN_PROGRESS
+        next_question = client_reply
+        db.add(
+            Message(
+                training_id=training.id,
+                role=MessageRole.AI,
+                content=next_question,
+            )
+        )
+    else:
+        user_scores = _collect_user_scores(training, current_score)
+        training.score = needs_final_score(user_scores)
+        ready = client_ready(user_scores)
+        final_text = str(scenario["final_good"] if ready else scenario["final_bad"])
+        db.add(
+            Message(
+                training_id=training.id,
+                role=MessageRole.AI,
+                content=final_text,
+            )
+        )
+        training.status = TrainingStatus.COMPLETED
+        training.completed_at = datetime.now(timezone.utc)
+        next_question = final_text
+    db.commit()
+    training = _get_training_or_404(db, training.id)
+    return AnswerOut(
+        score=current_score,
+        feedback=str(classification["feedback"]),
+        matched_keywords=[],
+        missed_keywords=[],
+        next_question=next_question,
+        training=TrainingOut.model_validate(training),
+    )
+
+
 @router.post("/", response_model=TrainingDetailOut)
 def start_training(
     payload: TrainingStartIn,
@@ -266,6 +406,8 @@ def start_training(
         return _start_product_knowledge(payload, db, current_user)
     if payload.mode == TrainingMode.OBJECTIONS:
         return _start_objections(payload, db, current_user)
+    if payload.mode == TrainingMode.NEEDS:
+        return _start_needs(payload, db, current_user)
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Режим ещё не реализован",
@@ -289,6 +431,31 @@ def list_objection_scenarios() -> list[ObjectionScenarioOut]:
         ) from exc
     return [
         ObjectionScenarioOut(
+            id=str(item.get("id", "")),
+            title=str(item.get("title", "")),
+            description=str(item.get("description", "")),
+        )
+        for item in scenarios
+    ]
+
+
+@router.get("/needs/scenarios", response_model=list[NeedsScenarioOut])
+def list_needs_scenarios() -> list[NeedsScenarioOut]:
+    """Публичный список сценариев режима «Выявление потребностей»."""
+    try:
+        scenarios = load_needs_scenarios()
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Банк сценариев недоступен",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Банк сценариев недоступен",
+        ) from exc
+    return [
+        NeedsScenarioOut(
             id=str(item.get("id", "")),
             title=str(item.get("title", "")),
             description=str(item.get("description", "")),
@@ -365,6 +532,8 @@ def submit_answer(
         )
     if training.mode == TrainingMode.OBJECTIONS:
         return _submit_objection_answer(training, payload, db)
+    if training.mode == TrainingMode.NEEDS:
+        return _submit_needs_answer(training, payload, db)
     if training.mode != TrainingMode.PRODUCT_KNOWLEDGE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

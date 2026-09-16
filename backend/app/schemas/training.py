@@ -72,3 +72,12 @@ class ObjectionScenarioOut(BaseModel):
     id: str
     title: str
     description: str
+
+
+class NeedsScenarioOut(BaseModel):
+    """Краткая карточка сценария выявления потребностей."""
+
+    id: str
+    title: str
+    description: str
+

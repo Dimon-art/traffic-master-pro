@@ -43,7 +43,7 @@ def test_start_product_knowledge_success(client, auth_headers_user, product_bank
 def test_start_unavailable_mode(client, auth_headers_user, product_bank):
     resp = client.post(
         "/api/trainings",
-        json={"mode": "needs"},
+        json={"mode": "sales_call"},
         headers=auth_headers_user,
     )
     assert resp.status_code == 400

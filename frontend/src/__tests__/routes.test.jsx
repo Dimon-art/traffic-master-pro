@@ -14,6 +14,8 @@ const EXPECTED_ROUTES = [
   '/training/product-knowledge',
   '/training/objections',
   '/training/objections/:topic',
+  '/training/needs',
+  '/training/needs/:topic',
   '/trainings',
   '/trainings/:trainingId',
   '/lead',

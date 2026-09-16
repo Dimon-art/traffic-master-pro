@@ -32,4 +32,16 @@ describe('/training — список режимов', () => {
       ].includes(el.textContent),
     )).toHaveLength(5)
   })
+
+  it('карточка «Выявление потребностей» активна', () => {
+    render(
+      <MemoryRouter>
+        <Training />
+      </MemoryRouter>,
+    )
+    const heading = screen.getByRole('heading', { name: /Выявление потребностей/i })
+    const card = heading.closest('article')
+    expect(card).toHaveTextContent('Начать')
+    expect(card).not.toHaveTextContent('Скоро')
+  })
 })

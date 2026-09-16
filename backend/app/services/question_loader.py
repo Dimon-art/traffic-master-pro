@@ -83,3 +83,35 @@ def load_objection_scenarios() -> list[dict]:
     if not isinstance(scenarios, list) or not scenarios:
         raise ValueError("Банк сценариев пуст")
     return scenarios
+
+
+def _needs_scenarios_path() -> Path:
+    """Путь к JSON-файлу сценариев выявления потребностей."""
+    return Path(settings.knowledge_base_path) / "client_search_methods" / "needs.json"
+
+
+@lru_cache(maxsize=1)
+def load_needs_scenarios() -> list[dict]:
+    """Читает список сценариев режима «Выявление потребностей».
+
+    Returns:
+        Список словарей сценариев из needs.json.
+
+    Raises:
+        FileNotFoundError: Если файл отсутствует.
+        ValueError: Если JSON некорректный или нет сценариев.
+    """
+    path = _needs_scenarios_path()
+    if not path.is_file():
+        raise FileNotFoundError(f"Файл сценариев не найден: {path}")
+    try:
+        with path.open(encoding="utf-8") as file:
+            data = json.load(file)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Некорректный JSON банка потребностей") from exc
+    if not isinstance(data, dict):
+        raise ValueError("Некорректный JSON банка потребностей")
+    scenarios = data.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        raise ValueError("Банк сценариев пуст")
+    return scenarios

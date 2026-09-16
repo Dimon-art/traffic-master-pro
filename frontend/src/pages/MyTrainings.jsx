@@ -23,6 +23,7 @@ const FILTERS = [
   { id: 'all', label: 'Все' },
   { id: 'product_knowledge', label: 'Знание продукта' },
   { id: 'objections', label: 'Возражения' },
+  { id: 'needs', label: 'Выявление потребностей' },
 ]
 
 const STATUS_LABELS = {

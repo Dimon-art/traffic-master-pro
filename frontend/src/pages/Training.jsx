@@ -28,7 +28,8 @@ const MODES = [
     id: 'needs',
     title: 'Выявление потребностей',
     description: 'ИИ играет роль клиента — вы учитесь задавать правильные вопросы.',
-    available: false,
+    available: true,
+    href: '/training/needs',
   },
   {
     id: 'sales_call',
@@ -73,7 +74,7 @@ function Training() {
               maxWidth: theme.layout.maxText,
             }}
           >
-            Сейчас доступны «Знание продукта» и «Работа с возражениями». Остальные режимы появятся следующими шагами.
+            Сейчас доступны «Знание продукта», «Работа с возражениями» и «Выявление потребностей». Остальные режимы появятся следующими шагами.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.sizes.sm }}>
             {MODES.map((mode) => (

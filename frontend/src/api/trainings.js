@@ -28,6 +28,10 @@ export function listObjectionScenarios() {
   return apiFetch('/trainings/objections/scenarios')
 }
 
+export function listNeedsScenarios() {
+  return apiFetch('/trainings/needs/scenarios')
+}
+
 export function deleteTraining(trainingId) {
   return apiFetch(`/trainings/${trainingId}`, {
     method: 'DELETE',
