@@ -40,7 +40,7 @@ services:
       - ./knowledge_base_volume:/app/knowledge_base
       - ./secrets:/run/secrets:ro
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT}:80"
     depends_on:
       - backend
 
