@@ -16,6 +16,8 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+COPY alembic.ini /app/alembic.ini
+COPY alembic /app/alembic
 COPY app/ /app/app
 
 EXPOSE 8000

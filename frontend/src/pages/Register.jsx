@@ -1,7 +1,7 @@
-/** Страница входа по email и паролю. */
+/** Страница регистрации нового пользователя. */
 
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
@@ -10,30 +10,36 @@ import Button from '../components/Button'
 import { useAuth } from '../context/AuthContext'
 import theme from '../styles/theme'
 
-function Login() {
+function Register() {
   const navigate = useNavigate()
-  const { user, login } = useAuth()
+  const { register } = useAuth()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
+    if (password.length < 8) {
+      setError('Пароль должен содержать не менее 8 символов')
+      return
+    }
+    if (password !== passwordConfirm) {
+      setError('Пароли не совпадают')
+      return
+    }
     setSubmitting(true)
     try {
-      await login(email, password)
+      await register(name.trim() || null, email, password)
       navigate('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось войти')
+      setError(err instanceof Error ? err.message : 'Не удалось зарегистрироваться')
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (user) {
-    return <Navigate to="/" replace />
   }
 
   const fieldStyle = {
@@ -71,7 +77,7 @@ function Login() {
               boxShadow: theme.shadows.card,
             }}
           >
-            <h1 style={{ fontSize: '32px', textAlign: 'center' }}>Вход в аккаунт</h1>
+            <h1 style={{ fontSize: '32px', textAlign: 'center' }}>Регистрация</h1>
             <p
               style={{
                 color: theme.colors.textMuted,
@@ -79,7 +85,7 @@ function Login() {
                 marginBottom: '32px',
               }}
             >
-              Войдите, чтобы начать тренировку
+              Создайте аккаунт, чтобы начать тренировку
             </p>
             {error ? (
               <div
@@ -96,6 +102,18 @@ function Login() {
               </div>
             ) : null}
             <form onSubmit={handleSubmit}>
+              <label htmlFor="name" style={labelStyle}>
+                Имя
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                style={fieldStyle}
+              />
               <label htmlFor="email" style={labelStyle}>
                 Email
               </label>
@@ -117,27 +135,28 @@ function Login() {
                 name="password"
                 type="password"
                 required
-                autoComplete="current-password"
+                minLength={8}
+                autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 style={fieldStyle}
               />
-              <label
-                htmlFor="remember"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: theme.sizes.xs,
-                  marginBottom: theme.sizes.md,
-                  fontSize: theme.sizes.bodySm,
-                  color: theme.colors.textBody,
-                }}
-              >
-                <input id="remember" name="remember" type="checkbox" />
-                Запомнить меня
+              <label htmlFor="passwordConfirm" style={labelStyle}>
+                Повторите пароль
               </label>
+              <input
+                id="passwordConfirm"
+                name="passwordConfirm"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={passwordConfirm}
+                onChange={(event) => setPasswordConfirm(event.target.value)}
+                style={{ ...fieldStyle, marginBottom: theme.sizes.md }}
+              />
               <Button type="submit" variant="primary" fullWidth disabled={submitting}>
-                {submitting ? 'Отправляю...' : 'Войти'}
+                {submitting ? 'Отправляю...' : 'Зарегистрироваться'}
               </Button>
             </form>
             <p
@@ -148,12 +167,8 @@ function Login() {
                 margin: `${theme.sizes.md} 0 0`,
               }}
             >
-              <a href="#" style={{ color: theme.colors.textMuted }}>
-                Забыли пароль?
-              </a>
-              {' · '}
-              <Link to="/register" style={{ color: theme.colors.textMuted }}>
-                Зарегистрироваться
+              <Link to="/login" style={{ color: theme.colors.textMuted }}>
+                Уже есть аккаунт? Войти
               </Link>
             </p>
           </div>
@@ -164,4 +179,4 @@ function Login() {
   )
 }
 
-export default Login
+export default Register

@@ -1,12 +1,14 @@
-/** Фиксированная шапка с якорной навигацией и кнопкой входа. */
+/** Фиксированная шапка с якорной навигацией и кнопкой входа или выхода. */
 
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { useAuth } from '../context/AuthContext'
 import theme from '../styles/theme'
 import Button from './Button'
 
 function Navbar() {
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -23,6 +25,11 @@ function Navbar() {
       window.removeEventListener('resize', onResize)
     }
   }, [])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <header
@@ -73,9 +80,28 @@ function Navbar() {
             </a>
           </div>
         )}
-        <Button variant="primary" size="md" onClick={() => navigate('/login')}>
-          Войти
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {user ? (
+            <>
+              <span
+                style={{
+                  color: theme.colors.textBody,
+                  fontSize: theme.sizes.bodySm,
+                  marginRight: theme.sizes.sm,
+                }}
+              >
+                {user.name || user.email}
+              </span>
+              <Button variant="secondary" size="md" onClick={handleLogout}>
+                Выйти
+              </Button>
+            </>
+          ) : (
+            <Button variant="primary" size="md" onClick={() => navigate('/login')}>
+              Войти
+            </Button>
+          )}
+        </div>
       </nav>
     </header>
   )

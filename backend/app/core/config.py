@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """Настройки приложения TrafficMaster Pro."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     sheets_calls_id: str = ""
     gdrive_backup_folder_id: str = ""
     knowledge_base_path: str = "/app/knowledge_base"
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 1440
 
     @property
     def database_url(self) -> str:

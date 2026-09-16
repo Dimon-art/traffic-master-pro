@@ -7,6 +7,7 @@ import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
 import Section from '../components/Section'
 import Button from '../components/Button'
+import { useAuth } from '../context/AuthContext'
 import theme from '../styles/theme'
 
 const MODES = [
@@ -42,6 +43,7 @@ const STEPS = [
 ]
 
 function Landing() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [isMobile, setIsMobile] = useState(false)
   const [hoveredMode, setHoveredMode] = useState(null)
@@ -90,9 +92,11 @@ function Landing() {
               <Button variant="primary" size="lg" onClick={() => navigate('/training')}>
                 Начать тренировку
               </Button>
-              <Button variant="secondary" size="lg" onClick={() => navigate('/login')}>
-                Войти в аккаунт
-              </Button>
+              {!user && (
+                <Button variant="secondary" size="lg" onClick={() => navigate('/login')}>
+                  Войти в аккаунт
+                </Button>
+              )}
             </div>
           </div>
         </Section>
