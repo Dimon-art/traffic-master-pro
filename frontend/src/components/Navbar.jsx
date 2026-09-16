@@ -85,6 +85,9 @@ function Navbar() {
             <>
               {isAdmin ? (
                 <>
+                  <Link to="/trainings" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
+                    Мои тренировки
+                  </Link>
                   <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
                     Заявки
                   </Link>
@@ -96,9 +99,14 @@ function Navbar() {
                   </Link>
                 </>
               ) : (
-                <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
-                  Мои заявки
-                </Link>
+                <>
+                  <Link to="/trainings" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
+                    Мои тренировки
+                  </Link>
+                  <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
+                    Мои заявки
+                  </Link>
+                </>
               )}
               <span
                 title={user.name ? `${user.name} (${user.email})` : user.email}

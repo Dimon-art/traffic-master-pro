@@ -10,9 +10,12 @@ import Landing from './pages/Landing.jsx'
 import Lead from './pages/Lead.jsx'
 import Leads from './pages/Leads.jsx'
 import Login from './pages/Login.jsx'
+import MyTrainings from './pages/MyTrainings.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Register from './pages/Register.jsx'
-import TrainingStub from './pages/TrainingStub.jsx'
+import Training from './pages/Training.jsx'
+import TrainingDetail from './pages/TrainingDetail.jsx'
+import TrainingProductKnowledge from './pages/TrainingProductKnowledge.jsx'
 
 function App() {
   return (
@@ -22,7 +25,31 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/training" element={<TrainingStub />} />
+          <Route path="/training" element={<Training />} />
+          <Route
+            path="/training/product-knowledge"
+            element={
+              <ProtectedRoute>
+                <TrainingProductKnowledge />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trainings"
+            element={
+              <ProtectedRoute>
+                <MyTrainings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trainings/:trainingId"
+            element={
+              <ProtectedRoute>
+                <TrainingDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/lead"
             element={

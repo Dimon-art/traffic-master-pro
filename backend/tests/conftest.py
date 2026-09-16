@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from app.models import Lead, User  # noqa: F401
+from app.models import Lead, Training, User  # noqa: F401
 
 engine = create_engine(
     "sqlite:///:memory:",
