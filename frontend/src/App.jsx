@@ -15,6 +15,8 @@ import NotFound from './pages/NotFound.jsx'
 import Register from './pages/Register.jsx'
 import Training from './pages/Training.jsx'
 import TrainingDetail from './pages/TrainingDetail.jsx'
+import TrainingObjectionSession from './pages/TrainingObjectionSession.jsx'
+import TrainingObjections from './pages/TrainingObjections.jsx'
 import TrainingProductKnowledge from './pages/TrainingProductKnowledge.jsx'
 
 function App() {
@@ -31,6 +33,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <TrainingProductKnowledge />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training/objections"
+            element={
+              <ProtectedRoute>
+                <TrainingObjections />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training/objections/:topic"
+            element={
+              <ProtectedRoute>
+                <TrainingObjectionSession />
               </ProtectedRoute>
             }
           />

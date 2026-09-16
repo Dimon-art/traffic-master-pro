@@ -64,3 +64,11 @@ class AnswerOut(BaseModel):
     missed_keywords: list[str]
     next_question: str | None
     training: TrainingOut
+
+
+class ObjectionScenarioOut(BaseModel):
+    """Краткая карточка сценария возражения для каталога."""
+
+    id: str
+    title: str
+    description: str

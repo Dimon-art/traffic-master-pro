@@ -23,3 +23,13 @@ export function submitAnswer(trainingId, content) {
     body: JSON.stringify({ content }),
   })
 }
+
+export function listObjectionScenarios() {
+  return apiFetch('/trainings/objections/scenarios')
+}
+
+export function deleteTraining(trainingId) {
+  return apiFetch(`/trainings/${trainingId}`, {
+    method: 'DELETE',
+  })
+}

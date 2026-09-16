@@ -13,11 +13,17 @@ import theme from '../styles/theme'
 
 const MODE_LABELS = {
   product_knowledge: 'Знание продукта',
-  objections: 'Возражения',
-  needs: 'Потребности',
-  sales_call: 'Созвон',
-  proposal: 'КП',
+  objections: 'Работа с возражениями',
+  needs: 'Выявление потребностей',
+  sales_call: 'Продающий созвон',
+  proposal: 'Мастер коммерческого предложения',
 }
+
+const FILTERS = [
+  { id: 'all', label: 'Все' },
+  { id: 'product_knowledge', label: 'Знание продукта' },
+  { id: 'objections', label: 'Возражения' },
+]
 
 const STATUS_LABELS = {
   started: 'Начата',
@@ -39,6 +45,7 @@ function MyTrainings() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState('all')
 
   useEffect(() => {
     async function load() {
@@ -73,6 +80,44 @@ function MyTrainings() {
               Новая тренировка
             </Button>
           </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: theme.sizes.xs,
+              flexWrap: 'wrap',
+              marginBottom: theme.sizes.md,
+            }}
+          >
+            {FILTERS.map((item) => {
+              const active = filter === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setFilter(item.id)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: theme.radii.full,
+                    border: `1px solid ${active ? theme.colors.accent : theme.colors.border}`,
+                    background: active ? theme.colors.accentSoft : theme.colors.bgElevated,
+                    color: active ? theme.colors.accent : theme.colors.textBody,
+                    cursor: 'pointer',
+                    fontSize: theme.sizes.caption,
+                    fontFamily: theme.fonts.sans,
+                    outline: 'none',
+                  }}
+                  onFocus={(event) => {
+                    event.currentTarget.style.boxShadow = `0 0 0 2px ${theme.colors.accent}`
+                  }}
+                  onBlur={(event) => {
+                    event.currentTarget.style.boxShadow = 'none'
+                  }}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
           {error ? (
             <div
               style={{
@@ -87,11 +132,13 @@ function MyTrainings() {
           ) : null}
           {loading ? (
             <p style={{ color: theme.colors.textMuted }}>Загрузка...</p>
-          ) : items.length === 0 ? (
+          ) : items.filter((item) => filter === 'all' || item.mode === filter).length === 0 ? (
             <p style={{ color: theme.colors.textMuted }}>Тренировок пока нет</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.sizes.sm }}>
-              {items.map((item) => (
+              {items
+                .filter((item) => filter === 'all' || item.mode === filter)
+                .map((item) => (
                 <article
                   key={item.id}
                   style={{

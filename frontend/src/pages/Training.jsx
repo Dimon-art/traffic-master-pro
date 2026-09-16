@@ -21,7 +21,8 @@ const MODES = [
     id: 'objections',
     title: 'Работа с возражениями',
     description: 'Диалог с ИИ-клиентом: «дорого», «нет времени», «сомневаюсь».',
-    available: false,
+    available: true,
+    href: '/training/objections',
   },
   {
     id: 'needs',
@@ -72,7 +73,7 @@ function Training() {
               maxWidth: theme.layout.maxText,
             }}
           >
-            Сейчас доступен режим «Знание продукта». Остальные появятся следующими шагами.
+            Сейчас доступны «Знание продукта» и «Работа с возражениями». Остальные режимы появятся следующими шагами.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.sizes.sm }}>
             {MODES.map((mode) => (
