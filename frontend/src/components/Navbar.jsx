@@ -101,12 +101,17 @@ function Navbar() {
                 </Link>
               )}
               <span
+                title={user.name ? `${user.name} (${user.email})` : user.email}
                 style={{
                   color: theme.colors.textBody,
                   fontSize: theme.sizes.bodySm,
+                  maxWidth: isMobile ? '140px' : '300px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {user.name || user.email}
+                {user.name ? `${user.name} (${user.email})` : user.email}
               </span>
               <Button variant="secondary" size="md" onClick={handleLogout}>
                 Выйти

@@ -110,6 +110,7 @@ function Register() {
                 name="name"
                 type="text"
                 autoComplete="name"
+                placeholder="Например, Иван"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 style={fieldStyle}

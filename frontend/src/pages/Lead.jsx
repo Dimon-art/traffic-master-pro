@@ -139,6 +139,7 @@ function Lead() {
                     required
                     minLength={2}
                     maxLength={100}
+                    placeholder="Например, Иван"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     style={fieldStyle}
@@ -174,6 +175,7 @@ function Lead() {
                     name="comment"
                     maxLength={2000}
                     rows={4}
+                    placeholder="Что вас интересует?"
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
                     style={{ ...fieldStyle, marginBottom: theme.sizes.md, resize: 'vertical' }}
