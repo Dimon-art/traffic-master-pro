@@ -27,3 +27,44 @@
 
 Оценка пока моковая: совпадение ключевых слов, без вызова OpenAI.
 
+## Бэкапы и восстановление данных
+
+### ⚠️ Главное правило
+
+НИКОГДА не запускайте `docker compose down -v` без явного намерения.
+Ключ `-v` (volumes) УДАЛЯЕТ ВСЕ ДАННЫЕ:
+- Postgres (пользователи, заявки, тренировки)
+- Redis (кэш)
+
+Безопасные команды:
+    docker compose down          # ✅ без -v, данные сохранятся
+    docker compose stop          # ✅ ещё безопаснее
+    docker compose restart       # ✅ перезапуск
+
+### Создание бэкапа
+
+    powershell -ExecutionPolicy Bypass -File scripts/backup_db.ps1
+
+Результат: `backups/backup_YYYY-MM-DD_HH-mm-ss.sql` (полный дамп Postgres).
+
+Старые дампы (>30 дней) удаляются автоматически.
+
+### Восстановление из бэкапа
+
+    powershell -ExecutionPolicy Bypass -File scripts/restore_db.ps1 -BackupFile backups/backup_XXXX.sql
+
+⚠️ Восстановление ПЕРЕЗАПИШЕТ текущую БД. Скрипт запросит подтверждение.
+
+### Рекомендации
+
+- Делать бэкап **перед** любыми рискованными операциями (миграции, `down -v`).
+- Хранить 2-3 последних бэкапа локально.
+- **Раз в неделю** копировать свежий дамп на внешний носитель или в облако.
+- Пароль от Postgres и SECRET_KEY — в менеджере паролей.
+
+### Восстановление пароля Postgres
+
+Если забыли пароль:
+    docker compose exec db psql -U trainer -d traffic_master -c "ALTER USER trainer WITH PASSWORD 'новый_пароль';"
+И затем обновить значение в `.env`.
+
