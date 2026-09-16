@@ -121,9 +121,10 @@ def list_trainings(
     current_user: User = Depends(get_current_user),
 ) -> list[Training]:
     """Список тренировок: свои или все для админа."""
-    query = db.query(Training)
-    if current_user.role != UserRole.ADMIN:
-        query = query.filter(Training.user_id == current_user.id)
+    if current_user.role == UserRole.ADMIN:
+        query = db.query(Training)
+    else:
+        query = db.query(Training).filter(Training.user_id == current_user.id)
     return query.order_by(Training.created_at.desc()).all()
 
 

@@ -86,7 +86,7 @@ function Navbar() {
               {isAdmin ? (
                 <>
                   <Link to="/trainings" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
-                    Мои тренировки
+                    Тренировки
                   </Link>
                   <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
                     Заявки

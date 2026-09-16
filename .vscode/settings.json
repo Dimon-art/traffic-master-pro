@@ -1,4 +1,4 @@
-﻿{
+{
   "python.defaultInterpreterPath": "./backend/.venv/bin/python",
   "python.analysis.typeCheckingMode": "basic",
   "[python]": {
@@ -22,5 +22,6 @@
   "editor.rulers": [100],
   "editor.tabSize": 2,
   "files.trimTrailingWhitespace": true,
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "cursorpyright.analysis.typeCheckingMode": "basic"
 }

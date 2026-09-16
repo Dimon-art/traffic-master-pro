@@ -8,6 +8,7 @@ import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
 import Section from '../components/Section'
 import Button from '../components/Button'
+import { useAuth } from '../context/AuthContext'
 import theme from '../styles/theme'
 
 const MODE_LABELS = {
@@ -33,6 +34,8 @@ function formatDate(value) {
 
 function MyTrainings() {
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
+  const title = isAdmin ? 'Все тренировки' : 'Мои тренировки'
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -65,7 +68,7 @@ function MyTrainings() {
               marginBottom: theme.sizes.lg,
             }}
           >
-            <h1 style={{ fontSize: theme.sizes.h2 }}>Мои тренировки</h1>
+            <h1 style={{ fontSize: theme.sizes.h2 }}>{title}</h1>
             <Button variant="primary" onClick={() => navigate('/training')}>
               Новая тренировка
             </Button>
