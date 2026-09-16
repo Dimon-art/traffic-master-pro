@@ -1,19 +1,22 @@
-/** Защита маршрутов: редирект гостей и авторизованных пользователей. */
+/** Защита маршрутов: редирект гостей, пользователей и не-админов. */
 
 import { Navigate } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
 
-function ProtectedRoute({ children, requireAuth = true }) {
-  const { loading, user } = useAuth()
+function ProtectedRoute({ children, requireAuth = true, requireAdmin = false }) {
+  const { loading, user, isAdmin } = useAuth()
 
   if (loading) {
     return <div>Загрузка...</div>
   }
-  if (requireAuth && !user) {
+  if (!user && requireAuth) {
     return <Navigate to="/login" replace />
   }
-  if (!requireAuth && user) {
+  if (user && requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />
+  }
+  if (user && !requireAuth) {
     return <Navigate to="/" replace />
   }
   return children

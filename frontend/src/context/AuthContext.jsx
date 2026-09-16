@@ -33,6 +33,8 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loading,
+      isAdmin: user?.role === 'admin',
+      role: user?.role || null,
       async login(email, password) {
         const data = await apiFetch('/auth/login', {
           method: 'POST',

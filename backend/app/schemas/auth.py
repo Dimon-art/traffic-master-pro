@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.models.user import UserRole
+
 
 class RegisterIn(BaseModel):
     """Тело запроса регистрации."""
@@ -29,7 +31,17 @@ class UserOut(BaseModel):
     id: UUID
     email: str
     name: str | None
+    role: UserRole
+    is_active: bool
     created_at: datetime | None
+
+
+class UserUpdateIn(BaseModel):
+    """Частичное обновление пользователя администратором."""
+
+    name: str | None = Field(default=None, max_length=100)
+    role: UserRole | None = None
+    is_active: bool | None = None
 
 
 class TokenOut(BaseModel):

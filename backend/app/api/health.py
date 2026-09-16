@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 
-import redis
 from fastapi import APIRouter, Depends
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -11,8 +10,21 @@ from app.core.config import settings
 
 router = APIRouter()
 
-engine = create_engine(settings.database_url, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+_engine = None
+_SessionLocal: sessionmaker[Session] | None = None
+
+
+def _get_session_local() -> sessionmaker[Session]:
+    """Лениво создаёт фабрику сессий для health-проверок.
+
+    Returns:
+        sessionmaker, привязанный к PostgreSQL.
+    """
+    global _engine, _SessionLocal
+    if _SessionLocal is None:
+        _engine = create_engine(settings.database_url, pool_pre_ping=True)
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+    return _SessionLocal
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -21,7 +33,7 @@ def get_db() -> Generator[Session, None, None]:
     Yields:
         Сессия подключения к PostgreSQL.
     """
-    db = SessionLocal()
+    db = _get_session_local()()
     try:
         yield db
     finally:
@@ -66,6 +78,8 @@ def health_redis() -> dict[str, str]:
     Returns:
         Словарь со статусом Redis или текстом ошибки.
     """
+    import redis
+
     client = None
     try:
         client = redis.from_url(settings.redis_url, socket_connect_timeout=2)

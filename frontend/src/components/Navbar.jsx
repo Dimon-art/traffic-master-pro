@@ -8,7 +8,7 @@ import theme from '../styles/theme'
 import Button from './Button'
 
 function Navbar() {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -80,14 +80,30 @@ function Navbar() {
             </a>
           </div>
         )}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: theme.sizes.sm, flexWrap: 'wrap' }}>
           {user ? (
             <>
+              {isAdmin ? (
+                <>
+                  <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
+                    Заявки
+                  </Link>
+                  <Link
+                    to="/admin/users"
+                    style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}
+                  >
+                    Пользователи
+                  </Link>
+                </>
+              ) : (
+                <Link to="/leads" style={{ color: theme.colors.textBody, fontSize: theme.sizes.bodySm }}>
+                  Мои заявки
+                </Link>
+              )}
               <span
                 style={{
                   color: theme.colors.textBody,
                   fontSize: theme.sizes.bodySm,
-                  marginRight: theme.sizes.sm,
                 }}
               >
                 {user.name || user.email}

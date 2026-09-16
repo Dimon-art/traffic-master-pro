@@ -29,6 +29,8 @@ function Footer() {
           color: theme.colors.textMuted,
         }}
       >
+        <Link to="/lead">Оставить заявку</Link>
+        {' · '}
         <Link to="/admin">Техническая панель</Link>
         {' · '}
         <a href="#">GitHub</a>
