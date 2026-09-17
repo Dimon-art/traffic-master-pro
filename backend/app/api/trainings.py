@@ -18,6 +18,8 @@ from app.schemas.training import (
     TrainingOut,
     TrainingStartIn,
 )
+from app.services.ai_client import ai_available
+from app.services.ai_simulator import get_needs_client_reply, get_objection_client_reply
 from app.services.needs_scorer import (
     classify_question,
     client_ready,
@@ -280,7 +282,14 @@ def _submit_objection_answer(
         )
     )
     is_good = bool(score_data["is_good"])
-    client_reply = pick_client_reply(is_good, round_data)
+    ai_reply = None
+    if ai_available():
+        ai_reply = get_objection_client_reply(
+            objection_title=str(scenario.get("title", "")),
+            history_messages=list(training.messages or []),
+            manager_answer=payload.content,
+        )
+    client_reply = ai_reply if ai_reply else pick_client_reply(is_good, round_data)
     training.current_question_index = index + 1
     if training.current_question_index < 5:
         training.status = TrainingStatus.IN_PROGRESS
@@ -345,9 +354,15 @@ def _submit_needs_answer(
         )
     )
     is_good = is_good_round(classification)
-    client_reply = str(
-        round_data["good_reply"] if is_good else round_data["bad_reply"]
-    )
+    mock_reply = str(round_data["good_reply"] if is_good else round_data["bad_reply"])
+    ai_reply = None
+    if ai_available():
+        ai_reply = get_needs_client_reply(
+            opening=str(scenario.get("opening", "")),
+            history_messages=list(training.messages or []),
+            manager_answer=payload.content,
+        )
+    client_reply = ai_reply if ai_reply else mock_reply
     training.current_question_index = index + 1
     if training.current_question_index < 7:
         training.status = TrainingStatus.IN_PROGRESS

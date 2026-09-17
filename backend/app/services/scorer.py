@@ -1,6 +1,8 @@
-"""Мок-оценка ответов менеджера по ключевым словам."""
+"""Оценка ответов менеджера: DeepSeek с fallback на ключевые слова."""
 
 import re
+
+from app.services.ai_client import ai_available
 
 
 def _normalize(text: str) -> str:
@@ -17,8 +19,8 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def score_answer(answer: str, question: dict) -> dict:
-    """Оценивает ответ 0-10 по совпадениям с keywords.
+def _score_answer_mock(answer: str, question: dict) -> dict:
+    """Мок-оценка 0-10 по совпадениям с keywords.
 
     Args:
         answer: Текст ответа менеджера.
@@ -60,6 +62,31 @@ def score_answer(answer: str, question: dict) -> dict:
         "missed_keywords": missed,
         "feedback": feedback,
     }
+
+
+def score_answer(answer: str, question: dict, use_ai: bool = True) -> dict:
+    """Оценивает ответ. При доступном ИИ — через DeepSeek, иначе мок.
+
+    Args:
+        answer: Текст ответа менеджера.
+        question: Словарь вопроса (text/question, model_answer, keywords).
+        use_ai: Пытаться ли вызвать DeepSeek (по умолчанию да).
+
+    Returns:
+        Словарь со score, matched_keywords, missed_keywords и feedback.
+    """
+    if use_ai and ai_available():
+        from app.services.ai_scorer import score_answer_ai
+
+        result = score_answer_ai(
+            question=question.get("text") or question.get("question", ""),
+            model_answer=question.get("model_answer", ""),
+            answer=answer,
+        )
+        if result is not None:
+            return result
+
+    return _score_answer_mock(answer, question)
 
 
 def final_score(scores: list[int]) -> int:

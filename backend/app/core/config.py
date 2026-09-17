@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
+    use_ai: bool = False
 
     @property
     def database_url(self) -> str:

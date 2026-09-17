@@ -4,6 +4,7 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only")
 os.environ.setdefault("ENVIRONMENT", "test")
+os.environ["USE_AI"] = "false"
 
 import pytest
 from fastapi.testclient import TestClient
