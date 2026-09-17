@@ -5,8 +5,10 @@ import pytest
 from app.core.config import settings
 from app.services import ai_client
 from app.services.ai_client import ai_available, ask_ai, get_ai_client
-from app.services.ai_scorer import score_answer_ai
+from app.services.ai_scorer import score_answer_ai, score_needs_answer_ai, score_objection_answer_ai
 from app.services.ai_simulator import get_needs_client_reply, get_objection_client_reply
+from app.services.needs_scorer import classify_question
+from app.services.objection_scorer import score_objection_answer
 from app.services.scorer import score_answer
 
 
@@ -101,3 +103,59 @@ def test_objection_client_reply_uses_ai(monkeypatch):
 def test_needs_client_reply_fallback(monkeypatch):
     monkeypatch.setattr(settings, "use_ai", False)
     assert get_needs_client_reply("Хочу продвижение", [], "Расскажите о цели") is None
+
+
+def test_score_objection_answer_ai_extracts_json(monkeypatch):
+    monkeypatch.setattr("app.services.ai_scorer.ai_available", lambda: True)
+    monkeypatch.setattr(
+        "app.services.ai_scorer.ask_ai",
+        lambda *args, **kwargs: '{"score": 8, "feedback": "Уверенно", "matched_keywords": ["ценность"], "missed_keywords": []}',
+    )
+    result = score_objection_answer_ai("Дорого", "Это инвестиция в навык", 0)
+    assert result is not None
+    assert result["score"] == 8
+    assert result["feedback"] == "Уверенно"
+
+
+def test_score_needs_answer_ai_extracts_json(monkeypatch):
+    monkeypatch.setattr("app.services.ai_scorer.ai_available", lambda: True)
+    monkeypatch.setattr(
+        "app.services.ai_scorer.ask_ai",
+        lambda *args, **kwargs: '{"score": 7, "feedback": "Открытый вопрос"}',
+    )
+    result = score_needs_answer_ai("Хочу продвижение", "Расскажите о цели", 0)
+    assert result is not None
+    assert result["score"] == 7
+    assert result["matched_keywords"] == []
+    assert result["missed_keywords"] == []
+
+
+def test_objection_scorer_falls_back_on_ai_error(monkeypatch):
+    monkeypatch.setattr("app.services.objection_scorer.ai_available", lambda: True)
+    monkeypatch.setattr("app.services.ai_scorer.score_objection_answer_ai", lambda **kwargs: None)
+    round_data = {
+        "expected_keywords": ["ценность", "результат"],
+        "min_keywords": 1,
+    }
+    result = score_objection_answer(
+        "ценность и результат",
+        round_data,
+        objection_title="Дорого",
+        round_index=0,
+    )
+    assert result["is_good"] is True
+    assert "ценность" in result["matched_keywords"]
+    assert 0 <= result["score"] <= 10
+
+
+def test_needs_classifier_falls_back_on_ai_error(monkeypatch):
+    monkeypatch.setattr("app.services.needs_scorer.ai_available", lambda: True)
+    monkeypatch.setattr("app.services.ai_scorer.score_needs_answer_ai", lambda **kwargs: None)
+    result = classify_question(
+        "Расскажите о вашем проекте",
+        0,
+        scenario_title="Хочу продвижение в Telegram",
+    )
+    assert result["score"] >= 7
+    assert result["is_open"] is True
+    assert "feedback" in result

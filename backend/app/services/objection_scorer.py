@@ -1,28 +1,55 @@
 """Оценка ответов в режиме «Работа с возражениями»."""
 
+from app.services.ai_client import ai_available
 from app.services.scorer import score_answer
 
 GOOD_SCORE_THRESHOLD = 6
 
 
-def score_objection_answer(answer: str, round_data: dict) -> dict:
-    """Оценивает реплику менеджера в текущем раунде возражения.
-
-    Args:
-        answer: Текст ответа менеджера.
-        round_data: Раунд сценария с expected_keywords и min_keywords.
-
-    Returns:
-        Оценка 0-10, ключевые слова, feedback и флаг is_good.
-    """
+def _score_objection_answer_mock(answer: str, round_data: dict) -> dict:
+    """Мок-оценка по ключевым словам раунда."""
     question = {
         "keywords": list(round_data.get("expected_keywords", [])),
         "min_keywords": int(round_data.get("min_keywords", 1)),
     }
-    result = score_answer(answer, question)
+    result = score_answer(answer, question, use_ai=False)
     score = int(result["score"])
     result["is_good"] = score >= GOOD_SCORE_THRESHOLD
     return result
+
+
+def score_objection_answer(
+    answer: str,
+    round_data: dict,
+    objection_title: str = "",
+    round_index: int = 0,
+    use_ai: bool = True,
+) -> dict:
+    """Оценивает ответ. При доступном ИИ — через DeepSeek, иначе мок.
+
+    Args:
+        answer: Текст ответа менеджера.
+        round_data: Раунд сценария с expected_keywords и min_keywords.
+        objection_title: Название возражения для промпта ИИ.
+        round_index: Номер раунда с нуля.
+        use_ai: Пытаться ли вызвать DeepSeek.
+
+    Returns:
+        Оценка 0-10, ключевые слова, feedback и флаг is_good.
+    """
+    if use_ai and ai_available():
+        from app.services.ai_scorer import score_objection_answer_ai
+
+        result = score_objection_answer_ai(
+            objection_title=objection_title,
+            manager_answer=answer,
+            round_index=round_index,
+        )
+        if result is not None:
+            result["is_good"] = int(result["score"]) >= GOOD_SCORE_THRESHOLD
+            return result
+
+    return _score_objection_answer_mock(answer, round_data)
 
 
 def pick_client_reply(is_good: bool, round_data: dict) -> str:

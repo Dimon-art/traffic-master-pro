@@ -271,7 +271,12 @@ def _submit_objection_answer(
             detail="Тренировка уже завершена",
         )
     round_data = rounds[index]
-    score_data = score_objection_answer(payload.content, round_data)
+    score_data = score_objection_answer(
+        payload.content,
+        round_data,
+        objection_title=str(scenario.get("title", "")),
+        round_index=index,
+    )
     current_score = int(score_data["score"])
     db.add(
         Message(
@@ -343,7 +348,11 @@ def _submit_needs_answer(
             detail="Тренировка уже завершена",
         )
     round_data = rounds[index]
-    classification = classify_question(payload.content, index)
+    classification = classify_question(
+        payload.content,
+        index,
+        scenario_title=str(scenario.get("title", "")),
+    )
     current_score = int(classification["score"])
     db.add(
         Message(

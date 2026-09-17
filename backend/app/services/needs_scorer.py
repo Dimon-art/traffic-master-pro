@@ -1,5 +1,7 @@
 """Классификация вопросов менеджера в режиме «Выявление потребностей»."""
 
+from app.services.ai_client import ai_available
+
 GOOD_SCORE_THRESHOLD = 6
 
 _SUMMARY_MARKERS = (
@@ -37,8 +39,8 @@ def _normalize(text: str) -> str:
     return text.lower()
 
 
-def classify_question(text: str, round_index: int = 0) -> dict:
-    """Классифицирует реплику менеджера: открытый вопрос, закрытый, резюме, цена.
+def _classify_question_mock(text: str, round_index: int = 0) -> dict:
+    """Мок-классификация по типу вопроса (открытый / закрытый / цена).
 
     Args:
         text: Текст реплики менеджера.
@@ -85,6 +87,45 @@ def classify_question(text: str, round_index: int = 0) -> dict:
         "score": score,
         "feedback": feedback,
     }
+
+
+def classify_question(
+    text: str,
+    round_index: int = 0,
+    scenario_title: str = "",
+    use_ai: bool = True,
+) -> dict:
+    """Классифицирует вопрос. При доступном ИИ — через DeepSeek, иначе мок.
+
+    Args:
+        text: Текст реплики менеджера.
+        round_index: Номер раунда с нуля.
+        scenario_title: Название сценария для промпта ИИ.
+        use_ai: Пытаться ли вызвать DeepSeek.
+
+    Returns:
+        Словарь с флагами, оценкой 0-10 и feedback на русском.
+    """
+    if use_ai and ai_available():
+        from app.services.ai_scorer import score_needs_answer_ai
+
+        result = score_needs_answer_ai(
+            scenario_title=scenario_title,
+            manager_answer=text,
+            round_index=round_index,
+        )
+        if result is not None:
+            score = int(result["score"])
+            return {
+                "is_open": score >= 6,
+                "is_closed": 2 <= score < 6,
+                "is_summary": score >= 9,
+                "is_price_premature": False,
+                "score": score,
+                "feedback": str(result.get("feedback", "")),
+            }
+
+    return _classify_question_mock(text, round_index)
 
 
 def is_good_round(classification: dict) -> bool:
